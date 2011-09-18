@@ -192,13 +192,22 @@ sub verify_rename {
     $this->{session}->{user} = $user;
 
     #$Foswiki::Sandbox::_trace = 1;
-    my $nmeta = Foswiki::Meta->new( $this->{session}, $newWeb, $newTopic );
-    $this->{session}->{store}->moveTopic( $meta, $nmeta, $user );
+    #my $nmeta = Foswiki::Meta->new( $this->{session}, $newWeb, $newTopic );
+    #Foswiki::Store->move( from=>$meta, address=>{web=>$newWeb, topic=>$newTopic}, cuid=>$user );
+    
+    my $nmeta_bad =
+      Foswiki::Store->create( address=>{web=>$newWeb, topic=>$newTopic} );
+    $meta->move($nmeta_bad, user=>$user);
+    #TODO: $meta->move(Foswiki::Address->new(web=>$newWeb, topic=>$newTopic), user=>$user);
 
     #$Foswiki::Sandbox::_trace = 0;
 
     $this->assert( !$this->{session}->topicExists( $oldWeb, $oldTopic ) );
     $this->assert( $this->{session}->topicExists( $newWeb, $newTopic ) );
+    
+    my $nmeta =
+      Foswiki::Store->load( address=>{web=>$newWeb, topic=>$newTopic});
+
     $this->assert( $nmeta->hasAttachment($attachment) );
 
     my $newRevAtt = $nmeta->getLatestRev($attachment);
