@@ -265,8 +265,7 @@ sub removeWebFixture {
     my ( $this, $session, $web ) = @_;
 
     try {
-        my $webObject = Foswiki::Store->load( address=>{web=>$web} );
-        $webObject->removeFromStore();
+        Foswiki::Store->remove( address=>{web=>$web} ) if (Foswiki::Store->exists( address=>{web=>$web} ));
     }
     otherwise {
         my $e = shift;
@@ -415,6 +414,30 @@ sub getUIFn {
         "$script function not set" );
     $fn .= '::' . $Foswiki::cfg{SwitchBoard}{$script}->{function};
     return \&$fn;
+}
+
+=begin TML
+
+---++ ObjectMethod createNewFoswikiSession(params) -> ref to new Foswiki obj
+
+cleans up the existing Foswiki object, and creates a new one
+
+params are passed directly to the new Foswiki() call
+
+typically called to force a full re-initialisation either with new preferences, topics, users, groups or CFG
+
+__DO NOT CALL session->finish() yourself__
+
+=cut
+
+sub createNewFoswikiSession {
+    my $this = shift;
+    
+    $this->{session}->finish();
+    $this->{session} = new Foswiki(@_ );
+    $Foswiki::Plugins::SESSION = $this->{session};
+    
+    return $this->{session};
 }
 
 1;
