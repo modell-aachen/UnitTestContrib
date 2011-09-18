@@ -154,37 +154,6 @@ sub verify_CreateSimpleTextTopic {
     $webObject->removeFromStore();
 }
 
-# Create a simple topic containing meta-data
-sub verify_CreateSimpleMetaTopic {
-    my $this = shift;
-
-    Foswiki::Func::createWeb( $web, '_default' );
-    $this->assert( $this->{session}->webExists($web) );
-    $this->assert( !$this->{session}->topicExists( $web, $topic ) );
-
-    my $meta = Foswiki::Meta->new( $this->{session}, $web, $topic, '' );
-    $meta->putKeyed( 'FIELD', { name => 'fieldname', value => 'meta' } );
-    $meta->save();
-    $this->assert( $this->{session}->topicExists( $web, $topic ) );
-    ( $date, $user, $rev, $comment ) =
-      Foswiki::Func::getRevisionInfo( $web, $topic );
-    $this->assert( $rev == 1, $rev );
-
-    my $readMeta = Foswiki::Meta->load( $this->{session}, $web, $topic );
-    $this->assert_equals( '', $readMeta->text );
-
-    # Clear out stuff that blocks assert_deep_equals
-    $meta->remove('TOPICINFO');
-    $readMeta->remove('TOPICINFO');
-    foreach my $m ( $meta, $readMeta ) {
-        $m->{_preferences} = $m->{_session} = $m->{_latestIsLoaded} =
-          $m->{_loadedRev} = undef;
-    }
-    $this->assert_deep_equals( $meta, $readMeta );
-    my $webObject = Foswiki::Meta->new( $this->{session}, $web );
-    Foswiki::Store->remove(address=>$webObject);
-}
-
 # Save a second version of a topic, without forcing a new revision. Should
 # re-use the existing rev number. Stores don't actually need to support this,
 # but we currently have no way of interrogating a store for it's capabilities.
