@@ -387,7 +387,7 @@ sub test_moveTopic {
       Foswiki::Meta->new( $this->{session}, $web, $topic . 'c', $text, $meta );
     $meta->save( user => $this->{test_user_login} );
 
-    $this->{session}->{store}->moveTopic(
+    Foswiki::Store->moveTopic(
         Foswiki::Meta->new( $this->{session}, $web, $topic ),
         Foswiki::Meta->new( $this->{session}, $web, 'TopicMovedToHere' ),
         $this->{test_user_cuid}
@@ -794,7 +794,7 @@ sub verify_eachChange {
     $meta = Foswiki::Meta->new( $this->{session}, $web, "PiggleNut", "Two" );
     $meta->save( forcenewrevision => 1 );
     my $change;
-    my $it = $this->{session}->{store}->eachChange( $meta, $start );
+    my $it = Foswiki::Store->eachChange( $meta, $start );
     $this->assert( $it->hasNext() );
     $change = $it->next();
     $this->assert_str_equals( "PiggleNut", $change->{topic} );
@@ -812,7 +812,7 @@ sub verify_eachChange {
     $this->assert_str_equals( "ClutterBuck", $change->{topic} );
     $this->assert_equals( 1, $change->{revision} );
     $this->assert( !$it->hasNext() );
-    $it = $this->{session}->{store}->eachChange( $meta, $mid );
+    $it = Foswiki::Store->eachChange( $meta, $mid );
     $this->assert( $it->hasNext() );
     $change = $it->next();
     $this->assert_str_equals( "PiggleNut", $change->{topic} );
@@ -826,10 +826,15 @@ sub verify_eachChange {
 
 sub verify_eachAttachment {
     my $this = shift;
+    
+    $this->assert(
+        not Foswiki::Func::attachmentExists(
+            $this->{test_web}, $this->{test_topic}, 'testfile.gif'
+        )
+    );
 
     my $meta =
-      Foswiki::Meta->new( $this->{session}, $this->{test_web},
-        $this->{test_topic}, "One" );
+        Foswiki::Store->create( address=>{web=>$this->{test_web}, topic=>$this->{test_topic}}, data=>{_text=>'One'} );
     $meta->attach(
         name    => "testfile.gif",
         file    => "$Foswiki::cfg{TempfileDir}/testfile.gif",
@@ -838,9 +843,8 @@ sub verify_eachAttachment {
     $meta->save();
 
     #load the disk version
-    $meta =
-      Foswiki::Meta->load( $this->{session}, $this->{test_web},
-        $this->{test_topic} );
+    $meta = Foswiki::Store->load( address=>{web=>$this->{test_web}, topic=>$this->{test_topic}} );
+
 
     my $f =
       "$Foswiki::cfg{PubDir}/$this->{test_web}/$this->{test_topic}/noise.dat";
@@ -850,11 +854,9 @@ sub verify_eachAttachment {
     $this->assert( -e $f );
 
     $meta->save();
-    $meta =
-      Foswiki::Meta->load( $this->{session}, $this->{test_web},
-        $this->{test_topic} );
+    $meta = Foswiki::Store->load( address=>{web=>$this->{test_web}, topic=>$this->{test_topic}} );
 
-    my $it = $this->{session}->{store}->eachAttachment($meta);
+    my $it = Foswiki::Store->eachAttachment(address=>$meta);
     my $list = join( ' ', sort $it->all() );
     $this->assert_str_equals( "noise.dat testfile.gif", $list );
 
@@ -870,11 +872,12 @@ sub verify_eachAttachment {
     );
 
     my $preDeleteMeta =
-      Foswiki::Meta->load( $this->{session}, $this->{test_web},
-        $this->{test_topic} );
+        Foswiki::Store->load( address=>{web=>$this->{test_web}, topic=>$this->{test_topic}} );
 
     sleep(1);    #ensure different timestamp on topic text
-    $meta->removeFromStore('testfile.gif');
+    #$meta->removeFromStore('testfile.gif');
+    Foswiki::Store->remove( address=>$meta, attachment=>'testfile.gif' );
+
 
     $this->assert(
         Foswiki::Func::topicExists( $this->{test_web}, $this->{test_topic} ) );
@@ -890,15 +893,14 @@ sub verify_eachAttachment {
     );
 
     my $postDeleteMeta =
-      Foswiki::Meta->load( $this->{session}, $this->{test_web},
-        $this->{test_topic} );
+        Foswiki::Store->load( address=>{web=>$this->{test_web}, topic=>$this->{test_topic}} );
 
 #Item10124: SvenDowideit thinks that the Meta API should retain consistency, so if you 'remove' an attachment, its META entry should also be removed
 #if we do this, the following line will fail.
     $this->assert_deep_equals( $preDeleteMeta->{FILEATTACHMENT},
         $postDeleteMeta->{FILEATTACHMENT} );
 
-    $it = $this->{session}->{store}->eachAttachment($postDeleteMeta);
+    $it = Foswiki::Store->eachAttachment(address=>$postDeleteMeta);
     $list = join( ' ', sort $it->all() );
     $this->assert_str_equals( "noise.dat", $list );
 }
