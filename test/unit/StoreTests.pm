@@ -112,16 +112,23 @@ sub verify_CreateWeb {
 # Create a web using non-existent Web - it should not create the web
 sub verify_CreateWebWithNonExistantBaseWeb {
     my $this = shift;
-    my $web  = 'FailToCreate';
+    my $web  = 'TemporaryTestFailToCreate';
+
+    #make sure the web doesn't exist
+    $this->assert( not Foswiki::Store->exists(address=>{web=>$web} ));
+    $this->assert( not Foswiki::Store->exists(address=>{web=>'DoesNotExists'} ));
 
     my $ok = 0;
     try {
         Foswiki::Func::createWeb( $web, 'DoesNotExists' );
     }
     catch Error::Simple with {
+        my $e = shift;
+        #print STDERR "catchit: ".$e->stringify()."\n";
         $ok = 1;
     };
     $this->assert($ok);
+    $this->assert( not Foswiki::Store->exists(address=>{web=>$web} ));
     $this->assert( !$this->{session}->webExists($web) );
 }
 
@@ -159,6 +166,9 @@ sub verify_CreateSimpleMetaTopic {
     $meta->putKeyed( 'FIELD', { name => 'fieldname', value => 'meta' } );
     $meta->save();
     $this->assert( $this->{session}->topicExists( $web, $topic ) );
+    ( $date, $user, $rev, $comment ) =
+      Foswiki::Func::getRevisionInfo( $web, $topic );
+    $this->assert( $rev == 1, $rev );
 
     my $readMeta = Foswiki::Meta->load( $this->{session}, $web, $topic );
     $this->assert_equals( '', $readMeta->text );

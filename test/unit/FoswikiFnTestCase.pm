@@ -91,9 +91,9 @@ sub set_up {
     $Foswiki::Plugins::SESSION = $this->{session};
     @mails                     = ();
     $this->{session}->net->setMailHandler( \&FoswikiFnTestCase::sentMail );
-    my $webObject = Foswiki::Meta->new( $this->{session}, $this->{test_web} );
+    my $webObject = Foswiki::Store->create( address=>{web=>$this->{test_web}} );
     $webObject->populateNewWeb();
-    $webObject = Foswiki::Meta->new( $this->{session}, $this->{users_web} );
+    $webObject = Foswiki::Store->create( address=>{web=>$this->{users_web}} );
     $webObject->populateNewWeb();
 
     $this->{test_user_forename} = 'Scum';
