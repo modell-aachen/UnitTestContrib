@@ -695,7 +695,7 @@ sub verify_attachmentSaveHandlers_file {
     close(FILE);
 
     Foswiki::Func::createWeb( $web, '_default' );
-    my $meta = Foswiki::Meta->new( $this->{session}, $web, $topic, '' );
+    my $meta = Foswiki::Store->create(address=>{web=>$web, topic=>$topic}, data=>{_text=>''});
     $meta->save();
 
     $this->registerAttachmentHandlers();
@@ -723,7 +723,7 @@ sub verify_attachmentSaveHandlers_stream {
     close(FILE);
 
     Foswiki::Func::createWeb( $web, '_default' );
-    my $meta = Foswiki::Meta->new( $this->{session}, $web, $topic, '' );
+    my $meta = Foswiki::Store->create(address=>{web=>$web, topic=>$topic}, data=>{_text=>''});
     $meta->save();
 
     $this->registerAttachmentHandlers();
@@ -752,7 +752,7 @@ sub verify_attachmentSaveHandlers_file_and_stream {
     close(FILE);
 
     Foswiki::Func::createWeb( $web, '_default' );
-    my $meta = Foswiki::Meta->new( $this->{session}, $web, $topic, '' );
+    my $meta = Foswiki::Store->create(address=>{web=>$web, topic=>$topic}, data=>{_text=>''});
     $meta->save();
 
     $this->registerAttachmentHandlers();
