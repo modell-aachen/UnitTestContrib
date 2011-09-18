@@ -39,21 +39,12 @@ sub set_up {
     $topicquery = new Unit::Request("");
     $topicquery->path_info("/$this->{test_web}/$this->{test_topic}");
 
+    my $webObject = Foswiki::Store->create( address=>{web=>$TWiki::cfg{SystemWebName}} );
+    $webObject->populateNewWeb($original);
 
-    try {
-        my $webObject = Foswiki::Meta->new( $this->{session}, $TWiki::cfg{SystemWebName} );
-        $webObject->populateNewWeb($original);
-
-        my $orig_sitepref = Foswiki::Store::load(address=>{web=>$original, topic=>$Foswiki::cfg{SitePrefsTopicName}});
-        my $m = Foswiki::Store::create(address=>{web=>$TWiki::cfg{SystemWebName}, topic=>$Foswiki::cfg{SitePrefsTopicName}}, data=>{_text=>$orig_sitepref->text()});
-        $m->save();
-    }
-    catch Foswiki::AccessControlException with {
-        $this->assert( 0, shift->stringify() );
-    }
-    catch Error::Simple with {
-        $this->assert( 0, shift->stringify() || '' );
-    };
+    my $orig_sitepref = Foswiki::Store::load(address=>{web=>$original, topic=>$Foswiki::cfg{SitePrefsTopicName}});
+    my $m = Foswiki::Store::create(address=>{web=>$TWiki::cfg{SystemWebName}, topic=>$Foswiki::cfg{SitePrefsTopicName}}, data=>{_text=>$orig_sitepref->text()});
+    $m->save();
 
     #GROUPs are cached, so we need to go again
     $this->{session}->finish();
