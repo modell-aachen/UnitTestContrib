@@ -23,10 +23,12 @@ sub set_up {
     my $this = shift;
     $this->SUPER::set_up();
 
-    my $topicObject = Foswiki::Meta->new(
-        $this->{session},
-        $Foswiki::cfg{UsersWebName},
-        $Foswiki::cfg{DefaultUserWikiName}, ''
+    my $topicObject = Foswiki::Store->create(
+        address=> {
+            web=>$Foswiki::cfg{UsersWebName},
+            topic=>$Foswiki::cfg{DefaultUserWikiName}
+            }, 
+            data=>{_text=>''}
     );
     $topicObject->save();
     $this->registerUser( 'white', 'Mr', "White", 'white@example.com' );
@@ -35,7 +37,7 @@ sub set_up {
     $this->{tmpdatafile}  = $Foswiki::cfg{TempfileDir} . '/tmpity-tmp.gif';
     $this->{tmpdatafile2} = $Foswiki::cfg{TempfileDir} . '/tmpity-tmp2.gif';
     $this->{test_web2}    = $this->{test_web} . 'Extra';
-    my $webObject = Foswiki::Meta->new( $this->{session}, $this->{test_web2} );
+    my $webObject = Foswiki::Store->create( address=>{web=>$this->{test_web2}} );
     $webObject->populateNewWeb();
 }
 
