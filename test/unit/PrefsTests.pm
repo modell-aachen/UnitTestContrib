@@ -43,11 +43,10 @@ sub set_up {
     try {
         my $webObject = Foswiki::Meta->new( $this->{session}, $TWiki::cfg{SystemWebName} );
         $webObject->populateNewWeb($original);
-        my $m =
-          Foswiki::Meta->load( $this->{session}, $original,
-            $TWiki::cfg{SitePrefsTopicName} );
-        $m->saveAs( $TWiki::cfg{SystemWebName},
-            $TWiki::cfg{SitePrefsTopicName} );
+
+        my $orig_sitepref = Foswiki::Store::load(address=>{web=>$original, topic=>$Foswiki::cfg{SitePrefsTopicName}});
+        my $m = Foswiki::Store::create(address=>{web=>$TWiki::cfg{SystemWebName}, topic=>$Foswiki::cfg{SitePrefsTopicName}}, data=>{_text=>$orig_sitepref->text()});
+        $m->save();
     }
     catch Foswiki::AccessControlException with {
         $this->assert( 0, shift->stringify() );
@@ -79,7 +78,8 @@ sub _set {
 
     my $user = $fatwilly->{user};
     $this->assert_not_null($user);
-    my $topicObject = Foswiki::Meta->load( $fatwilly, $web, $topic );
+    my $topicObject = Foswiki::Store::load(address=>{web=>$web, topic=>$topic});
+
     my $text = $topicObject->text() || '';
     $text =~ s/^\s*\* $type $pref =.*$//gm;
     $text .= "\n\t* $type $pref = $val\n";

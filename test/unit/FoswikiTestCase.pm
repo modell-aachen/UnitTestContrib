@@ -265,7 +265,7 @@ sub removeWebFixture {
     my ( $this, $session, $web ) = @_;
 
     try {
-        my $webObject = Foswiki::Meta->new( $session, $web );
+        my $webObject = Foswiki::Store->load( address=>{web=>$web} );
         $webObject->removeFromStore();
     }
     otherwise {

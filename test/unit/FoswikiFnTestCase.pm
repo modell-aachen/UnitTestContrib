@@ -108,10 +108,9 @@ sub set_up {
     );
     $this->{test_user_cuid} =
       $this->{session}->{users}->getCanonicalUserID( $this->{test_user_login} );
-    $this->{test_topicObject} = Foswiki::Meta->new(
-        $this->{session},    $this->{test_web},
-        $this->{test_topic}, "BLEEGLE\n"
-    );
+
+    $this->{test_topicObject} = Foswiki::Store::create(address=>{web=>$this->{test_web}, topic=>$this->{test_topic}});
+    $this->{test_topicObject}->text("BLEEGLE\n");
     $this->{test_topicObject}->save(forcedate=>(time()+60));
 }
 

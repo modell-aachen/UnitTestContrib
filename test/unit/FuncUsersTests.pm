@@ -1761,4 +1761,77 @@ sub verify_unregisteredUser_display {
         undef, 'wikiword wikiname' );
 }
 
+sub verify_denyNonAdminReadOfAdminGroupTopic {
+    my $this = shift;
+
+    return if ( $this->noUsersRegistered() );
+
+    # Force a re-read
+    $this->{session}->finish();
+    $this->{session} = new Foswiki( $Foswiki::cfg{AdminUserLogin} );
+    $Foswiki::Plugins::SESSION = $this->{session};
+    
+    $this->assert( Foswiki::Func::addUserToGroup( 'UserB',    'AdminGroup', 1 ) );
+
+    my $topicObject =
+      Foswiki::Meta->new( $this->{session}, $this->{users_web},
+        'AdminGroup' );
+    $topicObject->load();
+    $topicObject->text($topicObject."\n\n   * Set ALLOWTOPICVIEW = AdminGroup\n\n");
+    $topicObject->save();
+    
+    
+    {
+        $this->{session}->finish();
+        $this->{session} = new Foswiki( $Foswiki::cfg{AdminUserLogin} );
+        $Foswiki::Plugins::SESSION = $this->{session};
+
+        my $it = Foswiki::Func::eachGroupMember('AdminGroup');
+        my @list;
+        while ( $it->hasNext() ) {
+            my $g = $it->next();
+            push( @list, $g );
+        }
+        #as the baseusermapper is always admin, they should always see the full list
+        $this->assert_str_equals( "AdminUser,UserA,UserB",
+            sort join( ',', @list ) );
+        $this->assert($this->{session}->isAdmin());
+    }
+
+    {
+        # Force a re-read
+        $this->{session}->finish();
+        $this->{session} = new Foswiki( 'UserB' );
+        $Foswiki::Plugins::SESSION = $this->{session};
+
+        my $it = Foswiki::Func::eachGroupMember('AdminGroup');
+        my @list;
+        while ( $it->hasNext() ) {
+            my $g = $it->next();
+            push( @list, $g );
+        }
+        $this->assert_str_equals( "AdminUser,UserA,UserB",
+            sort join( ',', @list ) );
+        $this->assert($this->{session}->isAdmin())
+    }
+
+    {
+        # Force a re-read
+        $this->{session}->finish();
+        $this->{session} = new Foswiki( 'UserZ' );
+        $Foswiki::Plugins::SESSION = $this->{session};
+
+        my $it = Foswiki::Func::eachGroupMember('AdminGroup');
+        my @list;
+        while ( $it->hasNext() ) {
+            my $g = $it->next();
+            push( @list, $g );
+        }
+        $this->assert_str_equals( "AdminUser,UserA,UserB",
+            sort join( ',', @list ) );
+        $this->assert(not $this->{session}->isAdmin())
+    }
+}
+
+
 1;
