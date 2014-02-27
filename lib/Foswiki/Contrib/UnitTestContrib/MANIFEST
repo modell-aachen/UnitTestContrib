@@ -60,6 +60,7 @@ test/unit/FormattingTests.pm 0644
 test/unit/FoswikiFnTestCase.pm 0644
 test/unit/FoswikiPmFunctionsTests.pm 0644
 test/unit/FoswikiSeleniumTestCase.pm 0644
+test/unit/FoswikiSeleniumWdTestCase.pm 0644
 test/unit/FoswikiStoreTestCase.pm 0644
 test/unit/FoswikiSuite.pm 0644
 test/unit/FoswikiTestCase.pm 0644

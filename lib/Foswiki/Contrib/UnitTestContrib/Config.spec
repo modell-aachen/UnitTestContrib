@@ -14,10 +14,13 @@ $Foswiki::cfg{UnitTestContrib}{SeleniumRc}{Password} = '';
 # It is keyed by browser identifier - you choose the identifiers as seems sensible. Browser identifiers may only consist of alphanumeric characters.
 # Examples: <code>FF3 FF2dot1OnWindows IE6_1_345 w3m</code>
 # <br />
-# The values are hashes of arguments to <code>Test::WWW::Selenium->new()</code>. All fields have defaults, so <pre><code>{
+# The values are hashes of arguments to <code>Test::WWW::Selenium->new()</code> or <code>Selenium::Remote::Driver->new()</code>.
+# If you have tests for both frameworks, you will probably want to use the appropriate fields for both in your browser definitions.
+# All fields have defaults, so <pre><code>{
 #   FF => {}
 #}</code></pre> is a valid configuration (defaulting to Firefox on the same machine running the unit tests).
-# See <a href="http://search.cpan.org/perldoc?WWW%3A%3ASelenium">the WWW::Selenium documentation</a> for more information.
+# See <a href="http://search.cpan.org/perldoc?WWW%3A%3ASelenium">the WWW::Selenium documentation</a> and
+# <a href="http://search.cpan.org/perdoc?Selenium%3A%3ARemote%3A%3ADriver">the Selenium::Remote::Driver documentation</a> for more information.
 $Foswiki::cfg{UnitTestContrib}{SeleniumRc}{Browsers} = {};
 # **NUMBER**
 # The base timeout in milliseconds, used when waiting for the browser (and by implication, the server) to respond.
