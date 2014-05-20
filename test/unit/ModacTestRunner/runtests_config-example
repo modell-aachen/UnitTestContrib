@@ -1,0 +1,13 @@
+wikidir=/var/www/qwikis # this points to the base directory of all qwikis
+                        # eg. here you could have the wikis
+                        # /var/www/qwikis/firefox
+                        # /var/www/qwikis/chrome
+
+tmpdir=/var/www/seleniumtmp # this is a temporary directory for the test run
+                            # it should be writeable for the user running tests
+
+defaultwikis='firefox chrome' # these are the wikis to be tested by default;
+                              # this can be overwritten by cli
+
+#assertuser='www-data' # optional, when configured the script will check if
+                       # this is the current user

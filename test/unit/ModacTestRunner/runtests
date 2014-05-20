@@ -1,0 +1,106 @@
+#!/bin/bash
+plugins="$1"
+wikis="$2"
+
+# read config
+test -z "$configfile" && configfile='./ModacTestRunner/runtests_config'
+test -e "$configfile" || {
+    echo "No config '$configfile' for 'runtests' found!"
+    exit 1
+}
+source "$configfile"
+test -z "$wikidir" && {
+    echo "Missing config: 'wikidir'"
+    exit 1
+}
+test -z "$tmpdir" && {
+    echo "Missing config: 'tmpdir'"
+    exit 1
+}
+test -z "$defaultwikis" && {
+    echo "Missing config: 'defaultwikis'"
+    exit 1
+}
+
+# assert user (if configured)
+test -n "$assertuser" && {
+    test "$assertuser" = "`whoami`" || {
+        echo "You are not $assertuser"
+        exit 1
+    }
+}
+
+# create temporary files
+timestamp=`date +%s` # unique name for each run of this script
+ourtemp="$tmpdir/$timestamp"
+test -e "$ourtemp" && {
+    echo "Temporary directory already exists: '$ourtemp'"
+    exit 1
+}
+mkdir "$ourtemp" || { # XXX I assume I can write into that dir, just because I created it
+    echo "Could not create temporary directory: '$ourtemp'"
+    exit 1
+}
+
+# temporary files for dealing with multiple instances
+failedlog="$ourtemp/failed.log" # failures will be aggregated here
+lock="$ourtemp/testsjoin.lock" # for joining tests from each browser
+outlock="$ourtemp/output.lock" # synchronizes output to STDOUT
+
+# wikis to test
+test -z "$wikis" && wikis="$defaultwikis"
+
+# run tests
+for eachwiki in $wikis; do
+    # run each browser in parallel
+    ( flock -s 200
+        cd "$wikidir/$eachwiki/test/unit" || exit 1
+        logfile="$ourtemp/${eachwiki}.log"
+        failedtests=""
+
+        # find plugins to test (if not provided via cli)
+        test -z "$plugins" && {
+            plugins=`find -L . -maxdepth 2 -mindepth 1 -name qwikitest | sed -n 's#\./\(.*\)/qwikitest#\1#p'`
+        }
+
+        # run actual tests
+        for eachtest in $plugins; do
+            FOSWIKI_ASSERTS=1 ../bin/TestRunner.pl "$eachtest" >> "$logfile" 2>&1 || failedtests="$failedtests '$eachtest'"
+        done;
+
+        # print result to STDOUT / cleanup our logfile
+        ( flock -x 300 # only one output at a time
+            test -n "$failedtests" && {
+                echo "$eachwiki: $failedtests" >> "$failedlog"
+            }
+            echo "Results from $eachwiki:"
+            cat "$logfile"
+            rm "$logfile"
+        )300>"$outlock"
+    )200>"$lock"&
+    sleep 1; # let those tests be a little bit unsynchronized
+done
+
+# output result
+( flock -x 400
+    test -e "$failedlog" && {
+        echo
+        echo "failed tests:"
+        cat "$failedlog"
+        rm "$failedlog"
+        fail=1
+    } || {
+        echo
+        echo "all tests passed"
+        fail=0
+    }
+)400>"$lock"
+
+# cleanup
+rm "$lock" "$outlock"
+rmdir "$ourtemp" || {
+    echo "Could not remove temporary directory: '$ourtemp'"
+    # not setting as a fail, more like a warning
+}
+
+exit $fail
