@@ -1,0 +1,25 @@
+wikidir=/var/www/qwikis # this points to the base directory of all qwikis
+                        # eg. here you could have the wikis
+                        # /var/www/qwikis/firefox
+                        # /var/www/qwikis/chrome
+
+tmpdir=/var/www/seleniumtmp # this is a temporary directory for the test run
+                            # it should be writeable for the user running tests
+
+defaultwikis='firefox chrome' # These are the wikis to be tested by default.
+                              # Wikis separated by spaces are run in parallel,
+                              # when a comma is encoutered we wait for all
+                              # wikis to finish.
+                              # Eg. "firefox chrome, ie7 ie8" will test firefox
+                              # and chrome in parallel, will wait for them to
+                              # finish and then test ie7 and ie8 in parallel.
+                              # This can be overwritten by cli.
+
+#assertuser='www-data' # optional, when configured the script will check if
+                       # this is the current user
+
+#maxConfigTests=5 # optional (defaults to 5), attempt to initialize the
+                  # connection this many times prior to running any test
+
+#sleepConfigTests=5 # optional (defaults to 5), sleep this time (in seconds)
+                    # after an initialization attempt failed

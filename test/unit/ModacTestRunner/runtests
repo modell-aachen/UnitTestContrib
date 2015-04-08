@@ -1,0 +1,142 @@
+#!/bin/bash
+plugins="$1"
+wikis="$2"
+
+# read config
+test -z "$configfile" && configfile='./ModacTestRunner/runtests_config'
+test -e "$configfile" || {
+    echo "No config '$configfile' for 'runtests' found!"
+    exit 1
+}
+source "$configfile"
+test -z "$wikidir" && {
+    echo "Missing config: 'wikidir'"
+    exit 1
+}
+test -z "$tmpdir" && {
+    echo "Missing config: 'tmpdir'"
+    exit 1
+}
+test -z "$defaultwikis" && {
+    echo "Missing config: 'defaultwikis'"
+    exit 1
+}
+
+# defaults
+test -z "$maxConfigTests" && {
+    maxConfigTests=5;
+}
+test -z "$sleepConfigTests" && {
+    sleepConfigTests=5;
+}
+
+# assert user (if configured)
+test -n "$assertuser" && {
+    test "$assertuser" = "`whoami`" || {
+        echo "You are not $assertuser"
+        exit 1
+    }
+}
+
+# create temporary files
+timestamp=`date +%s` # unique name for each run of this script
+ourtemp="$tmpdir/$timestamp"
+test -e "$ourtemp" && {
+    echo "Temporary directory already exists: '$ourtemp'"
+    exit 1
+}
+mkdir "$ourtemp" || { # XXX I assume I can write into that dir, just because I created it
+    echo "Could not create temporary directory: '$ourtemp'"
+    exit 1
+}
+
+# temporary files for dealing with multiple instances
+failedlog="$ourtemp/failed.log" # failures will be aggregated here
+lock="$ourtemp/testsjoin.lock" # for joining tests from each browser
+outlock="$ourtemp/output.lock" # synchronizes output to STDOUT
+
+# wikis to test
+test -z "$wikis" && wikis="$defaultwikis"
+# reformat "browser1, browser2" -> "browser1 , browser2" for for-loop
+# finish with "," so it waits for all tests to finish
+wikis="`echo "$wikis" | sed -e 's# *, *# , #g'` ,"
+
+# run tests
+for eachwiki in $wikis; do
+    test "$eachwiki" = ',' && {
+        # join testruns
+        flock -x "$lock" echo -e "\nBatch finished\n"
+    } || {
+        # run each browser in parallel
+        ( flock -s 200
+            cd "$wikidir/$eachwiki/test/unit" || exit 1
+            logfile="$ourtemp/${eachwiki}.log"
+            failedtests=""
+
+            # find plugins to test (if not provided via cli)
+            test -z "$plugins" && {
+                plugins=`find -L . -maxdepth 2 -mindepth 1 -name qwikitest | sed -n 's#\./\(.*\)/qwikitest#\1#p'`
+            }
+
+            # run configtest until it passes
+            configTestPassed="";
+            attempt=0;
+            testlog="/dev/null";
+            while [ "$attempt" -lt "$maxConfigTests" -a -z "$configTestPassed" ]; do
+                attempt=$[$attempt + 1];
+                test "$attempt" -lt "$maxConfigTests" || {
+                    echo "last attempt, activating logs for config test" >> "$logfile";
+                    testlog="$logfile";
+                }
+                echo "Running config test attempt $attempt..." >> "$logfile";
+                ../bin/TestRunner.pl 'ModacTestRunner/ModacTestRunnerSeleniumTestCase.pm' >> "$testlog" 2>&1 && {
+                    echo "...config test passed." >> "$logfile";
+                    configTestPassed=1;
+                } || {
+                    echo "...sleeping for $sleepConfigTests seconds after config test failed." >> "$logfile";
+                    sleep "$sleepConfigTests";
+                }
+            done
+
+            test "$maxConfigTests" != '0' -a -z "$configTestPassed" && {
+                failedtests=" (Selenium failed to initialize)";
+            } || {
+                # run actual tests
+                for eachtest in $plugins; do
+                   FOSWIKI_ASSERTS=1 ../bin/TestRunner.pl "$eachtest" >> "$logfile" 2>&1 || failedtests="$failedtests '$eachtest'"
+                done;
+            }
+
+            # print result to STDOUT / cleanup our logfile
+            ( flock -x 300 # only one output at a time
+                test -n "$failedtests" && {
+                    echo "$eachwiki: $failedtests" >> "$failedlog"
+                }
+                echo "Results from $eachwiki:"
+                cat "$logfile"
+                rm "$logfile"
+            )300>"$outlock"
+        )200>"$lock"&
+        sleep 1; # let those tests be a little bit unsynchronized
+    }
+done
+
+# output result
+test -e "$failedlog" && {
+    echo "failed tests:"
+    cat "$failedlog"
+    rm "$failedlog"
+    fail=1
+} || {
+    echo "all tests passed"
+    fail=0
+}
+
+# cleanup
+rm "$lock" "$outlock"
+rmdir "$ourtemp" || {
+    echo "Could not remove temporary directory: '$ourtemp'"
+    # not setting as a fail, more like a warning
+}
+
+exit $fail
