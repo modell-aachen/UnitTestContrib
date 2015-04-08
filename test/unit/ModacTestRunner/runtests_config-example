@@ -17,3 +17,9 @@ defaultwikis='firefox chrome' # These are the wikis to be tested by default.
 
 #assertuser='www-data' # optional, when configured the script will check if
                        # this is the current user
+
+#maxConfigTests=5 # optional (defaults to 5), attempt to initialize the
+                  # connection this many times prior to running any test
+
+#sleepConfigTests=5 # optional (defaults to 5), sleep this time (in seconds)
+                    # after an initialization attempt failed

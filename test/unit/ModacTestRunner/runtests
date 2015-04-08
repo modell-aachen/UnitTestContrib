@@ -22,6 +22,14 @@ test -z "$defaultwikis" && {
     exit 1
 }
 
+# defaults
+test -z "$maxConfigTests" && {
+    maxConfigTests=5;
+}
+test -z "$sleepConfigTests" && {
+    sleepConfigTests=5;
+}
+
 # assert user (if configured)
 test -n "$assertuser" && {
     test "$assertuser" = "`whoami`" || {
@@ -70,10 +78,34 @@ for eachwiki in $wikis; do
                 plugins=`find -L . -maxdepth 2 -mindepth 1 -name qwikitest | sed -n 's#\./\(.*\)/qwikitest#\1#p'`
             }
 
-            # run actual tests
-            for eachtest in $plugins; do
-               FOSWIKI_ASSERTS=1 ../bin/TestRunner.pl "$eachtest" >> "$logfile" 2>&1 || failedtests="$failedtests '$eachtest'"
-            done;
+            # run configtest until it passes
+            configTestPassed="";
+            attempt=0;
+            testlog="/dev/null";
+            while [ "$attempt" -lt "$maxConfigTests" -a -z "$configTestPassed" ]; do
+                attempt=$[$attempt + 1];
+                test "$attempt" -lt "$maxConfigTests" || {
+                    echo "last attempt, activating logs for config test" >> "$logfile";
+                    testlog="$logfile";
+                }
+                echo "Running config test attempt $attempt..." >> "$logfile";
+                ../bin/TestRunner.pl 'ModacTestRunner/ModacTestRunnerSeleniumTestCase.pm' >> "$testlog" 2>&1 && {
+                    echo "...config test passed." >> "$logfile";
+                    configTestPassed=1;
+                } || {
+                    echo "...sleeping for $sleepConfigTests seconds after config test failed." >> "$logfile";
+                    sleep "$sleepConfigTests";
+                }
+            done
+
+            test "$maxConfigTests" != '0' -a -z "$configTestPassed" && {
+                failedtests=" (Selenium failed to initialize)";
+            } || {
+                # run actual tests
+                for eachtest in $plugins; do
+                   FOSWIKI_ASSERTS=1 ../bin/TestRunner.pl "$eachtest" >> "$logfile" 2>&1 || failedtests="$failedtests '$eachtest'"
+                done;
+            }
 
             # print result to STDOUT / cleanup our logfile
             ( flock -x 300 # only one output at a time
