@@ -40,7 +40,8 @@ BEGIN {
     # in FOSWIKI_LIBS.
 
     my $root = _findRelativeTo( $here, 'core/bin/setlib.cfg' )
-      || _findRelativeTo( $here, 'bin/setlib.cfg' );
+      || _findRelativeTo( $here, 'bin/setlib.cfg' )
+      || _findRelativeTo( $ENV{FOSWIKI_LIBS}, 'bin/setlib.cfg');
 
     die "Cannot locate bin/setlib.cfg" unless $root;
 
