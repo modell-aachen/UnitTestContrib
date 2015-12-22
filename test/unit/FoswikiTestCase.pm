@@ -381,7 +381,7 @@ sub _check_dependency {
             module => $module
           );
 
-        ($result) = $dep->check();
+        ($result) = $dep->checkDependency();
     }
     else {
         $this->assert( 0, "Don't know how to check for module '$what'" );
