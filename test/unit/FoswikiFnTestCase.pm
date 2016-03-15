@@ -100,6 +100,13 @@ sub set_up {
     $webObject = $this->populateNewWeb( $this->{users_web} );
     $webObject->finish();
 
+    if(Foswiki::Func::topicExists($Foswiki::cfg{SystemWebName}, 'SeleniumTestNewUserTemplate')) {
+        my ($meta, $text) = Foswiki::Func::readTopic($Foswiki::cfg{SystemWebName}, 'SeleniumTestNewUserTemplate');
+        $meta->web($this->{users_web});
+        $meta->topic('NewUserTemplate');
+        $meta->saveAs();
+    }
+
     $this->{test_user_forename} = 'Scum';
     $this->{test_user_surname}  = 'Bag';
     $this->{test_user_wikiname} =
