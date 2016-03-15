@@ -81,6 +81,7 @@ test/unit/ModacTestRunner/ModacTestRunnerSeleniumTestCase.pm 0755
 test/unit/ModacTestRunner/runtests 0755
 test/unit/ModacTestRunner/runtests_config-example 0644
 test/unit/MetaTests.pm 0644
+test/unit/ModacSeleniumTestCase.pm 0644
 test/unit/NetTests.pm 0644
 test/unit/PasswordTests.pm 0644
 test/unit/PluginHandlerTests.pm 0644
