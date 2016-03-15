@@ -23,6 +23,45 @@ sub skip {
   return $this->SUPER::skip( $test );
 }
 
+sub setInputValue {
+  my ($this, $selector, $value) = @_;
+  my $elem = $this->{selenium}->find_element($selector, 'css');
+  $elem->send_keys($value);
+}
+
+sub setSelect2Values {
+  my $this = shift;
+  my $selector = shift;
+  my @values = @_;
+  my $s = $this->{selenium};
+
+  $selector .= ' + .select2' unless $selector =~ /\+\s?\.select2$/;
+  my $elem = $s->find_element($selector, 'css');
+  my $resultSel = '.select2-results__option--highlighted';
+
+  my @results;
+  foreach my $value (@values) {
+    $elem->click();
+    $this->waitForSelector('.select2-container--open');
+    $s->find_element('.select2-container--open .select2-search__field', 'css')->send_keys($value);
+
+    for (my $i = 0; $i < 3; $i++) {
+      $this->waitForSelector($resultSel);
+      my $result = $s->find_element($resultSel, 'css');
+      my $txt = $result->get_text();
+
+      if (grep(/^$txt$/, @results)) {
+        sleep(5);
+        next;
+      } else {
+        push(@results, $txt);
+        $result->click();
+        last;
+      }
+    }
+  }
+}
+
 # XXX Copy/Paste/Change from FoswikiSeleniumTestCase
 sub login {
   return if $loggedIn;
