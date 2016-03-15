@@ -1,4 +1,6 @@
 bin/test 0755
+data/System/SeleniumTestNewUserTemplate.txt 0644
+data/System/SeleniumTestUserForm.txt 0644
 data/System/UnitTestContrib.txt 0644
 lib/Foswiki/Contrib/UnitTestContrib.pm 0644
 lib/Foswiki/Contrib/UnitTestContrib/Config.spec 0644
