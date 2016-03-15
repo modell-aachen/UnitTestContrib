@@ -15,8 +15,8 @@ our $loggedIn = 0;
 sub skip {
   my ($this, $test) = @_;
 
-  my $package = __PACKAGE__;
-  if ( $test && $ENV{DOTEST} && $test !~ m#^$package::\Q$ENV{DOTEST}\E_on# ) {
+  my $package = ref($this);
+  if ( $test && $ENV{DOTEST} && $test !~ m#^\Q$package\E::\Q$ENV{DOTEST}\E_on# ) {
     return "Test not selected. Skipping...";
   }
 
