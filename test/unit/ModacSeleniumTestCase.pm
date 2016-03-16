@@ -12,6 +12,17 @@ our @ISA = qw(FoswikiSeleniumWdTestCase);
 
 our $loggedIn = 0;
 
+sub new {
+  my $class = shift;
+  my $this  = $class->SUPER::new(@_);
+
+  my $usr = $ENV{TESTUSERS} || $Foswiki::cfg{UnitTestContrib}{SeleniumRc}{Username};
+  $usr =~ s/\s*//g;
+  my @users = split(/,/, $usr);
+  $this->{users} = \@users;
+  return $this;
+}
+
 sub skip {
   my ($this, $test) = @_;
 
