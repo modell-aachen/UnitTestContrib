@@ -29,6 +29,68 @@ sub setInputValue {
   $elem->send_keys($value);
 }
 
+sub setDate2Today {
+  my $this = shift;
+  my $selector = shift;
+  my $s = $this->{selenium};
+
+  $s->find_element($selector, 'css')->click();
+  $s->find_element("$selector + .picker--opened .picker__button--today", 'css')->click();
+}
+
+sub setDate2Empty {
+  my $this = shift;
+  my $selector = shift;
+  my $s = $this->{selenium};
+
+  $s->find_element($selector, 'css')->click();
+  $s->find_element("$selector + .picker--opened .picker__button--clear", 'css')->click();
+}
+
+sub setDate2Value {
+  my $this = shift;
+  my $selector = shift;
+  my ($year, $month, $day) = @_;
+  my $s = $this->{selenium};
+
+  $s->find_element($selector, 'css')->click();
+  my $elemY = $s->find_element("$selector + .picker--opened .picker__select--year", 'css');
+  $s->find_child_element($elemY, "option[value=\"$year\"]", 'css')->click();
+
+  my $elemM = $s->find_element("$selector + .picker--opened .picker__select--month", 'css');
+  $s->find_child_element($elemM, "option[value=\"$month\"]", 'css')->click();
+
+  my @days = $s->find_elements("$selector + .picker--opened .picker__table td div", 'css');
+  foreach my $div (@days) {
+    my $txt = $div->get_text();
+    $txt =~ s/\s*//g;
+    if ($txt =~ /^$day$/) {
+      $div->click();
+      last;
+    }
+  }
+}
+
+sub setSelectValues {
+  my $this = shift;
+  my $selector = shift;
+  my @values = @_;
+  my $s = $this->{selenium};
+
+  my $select = $s->find_element($selector, 'css');
+  my @options = $s->find_child_elements($select, 'option', 'css');
+  foreach my $value (@values) {
+    my $option = $s->find_child_element($select, "option[value=\"$value\"]", 'css');
+    if ($option) {
+      $option->click();
+      next;
+    }
+
+    my @results = grep {$_->get_text() =~ /^$value$/} @options;
+    $results[0]->click() if scalar(@results);
+  }
+}
+
 sub setSelect2Values {
   my $this = shift;
   my $selector = shift;
@@ -45,13 +107,13 @@ sub setSelect2Values {
     $this->waitForSelector('.select2-container--open');
     $s->find_element('.select2-container--open .select2-search__field', 'css')->send_keys($value);
 
-    for (my $i = 0; $i < 3; $i++) {
+    for (my $i = 0; $i < 15; $i++) {
       $this->waitForSelector($resultSel);
       my $result = $s->find_element($resultSel, 'css');
       my $txt = $result->get_text();
 
       if (grep(/^$txt$/, @results)) {
-        sleep(5);
+        sleep(1);
         next;
       } else {
         push(@results, $txt);
