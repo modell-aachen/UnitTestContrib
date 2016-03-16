@@ -34,6 +34,18 @@ sub skip {
   return $this->SUPER::skip( $test );
 }
 
+sub assertElementIsPresent {
+  my $this = shift;
+  my $selector = shift;
+
+  unless ($selector =~ /^\w+=.+/) {
+    $selector = "css=$selector";
+  }
+
+  $this->SUPER::assertElementIsPresent($selector, @_);
+  return;
+}
+
 sub setInputValue {
   my ($this, $selector, $value) = @_;
   my $elem = $this->{selenium}->find_element($selector, 'css');
