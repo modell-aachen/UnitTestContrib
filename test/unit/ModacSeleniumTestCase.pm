@@ -46,6 +46,12 @@ sub assertElementIsPresent {
   return;
 }
 
+sub normalizeEpoch {
+  my ($this, $epoch) = @_;
+  my $date = Foswiki::Time::formatTime($epoch, '$year-$mo-$day');
+  Foswiki::Time::formatTime(Foswiki::Time::parseTime($date), '$epoch');
+}
+
 sub setInputValue {
   my ($this, $selector, $value) = @_;
   my $elem = $this->{selenium}->find_element($selector, 'css');
