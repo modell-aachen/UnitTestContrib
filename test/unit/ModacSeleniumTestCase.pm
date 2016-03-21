@@ -23,6 +23,47 @@ sub new {
   return $this;
 }
 
+sub loadExtraConfig {
+  # Skip initialization from FoswikiFnTestCase
+}
+
+sub set_up {
+  my $this = shift;
+  # Skip initialization from FoswikiFnTestCase and go directly to FoswikiTestCase
+  FoswikiTestCase::set_up($this, @_);
+
+  # partial copy from FoswikiFnTestCase follows
+  # (skips registering dummy user)
+
+  my $query = new Unit::Request("");
+  $query->path_info("/$this->{test_web}/$this->{test_topic}");
+
+  # Note: some tests are testing Foswiki::UI which also creates a session
+  $this->createNewFoswikiSession( undef, $query );
+  $this->{response} = new Unit::Response();
+  $this->{session}->net->setMailHandler( \&FoswikiFnTestCase::sentMail );
+  my $webObject = $this->populateNewWeb( $this->{test_web} );
+  $webObject->finish();
+
+  $this->{test_topicObject}->finish() if $this->{test_topicObject};
+  ( $this->{test_topicObject} ) =
+    Foswiki::Func::readTopic( $this->{test_web}, $this->{test_topic} );
+  $this->{test_topicObject}->text("%HRT%\n");
+  $this->{test_topicObject}->save( forcedate => ( time() + 60 ) );
+}
+
+sub tear_down {
+  my $this = shift;
+
+  # partial copy from FoswikiFnTestCase follows
+  # (skips things related to user fixtures)
+
+  $this->removeWebFixture( $this->{session}, $this->{test_web} );
+  # go directly to grandparent, skip FoswikiFnTestCase
+  FoswikiTestCase::tear_down($this, @_);
+
+}
+
 sub skip {
   my ($this, $test) = @_;
 
