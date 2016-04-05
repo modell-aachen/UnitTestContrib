@@ -294,8 +294,8 @@ sub view {
 sub waitForPageToLoad {
     my $this = shift;
     $this->waitFor(sub {
-        $this->{selenium}->execute_script('if(window.SeleniumMarker) return 0; return jQuery("#modacContentsWrapper").length');
-    }, 'Page did not load after transition', undef, 10_000 );
+        $this->{selenium}->execute_script('if(window.SeleniumMarker) return 0; if(typeof jQuery !== "function" || typeof foswiki !== "object") return 0; return jQuery("#modacContentsWrapper").length');
+    }, 'Page did not load', undef, 10_000 );
 }
 
 # Sets a marker for waitForPageToLoad to listen to.
