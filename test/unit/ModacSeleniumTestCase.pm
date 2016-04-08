@@ -45,6 +45,8 @@ sub set_up {
   my $webObject = $this->populateNewWeb( $this->{test_web} );
   $webObject->finish();
 
+  $this->{tempWebs} = {};
+
   $this->{test_topicObject}->finish() if $this->{test_topicObject};
   ( $this->{test_topicObject} ) =
     Foswiki::Func::readTopic( $this->{test_web}, $this->{test_topic} );
@@ -59,6 +61,14 @@ sub tear_down {
   # (skips things related to user fixtures)
 
   $this->removeWebFixture( $this->{session}, $this->{test_web} );
+
+  # Clean up stuff created by installAppWeb
+  while (my ($k, $v) = each(%{$this->{tempWebs}})) {
+    for (my $i = 1; $i < $v; $i++) {
+      $this->removeWebFixture( $this->{session}, "Temporary${k}Web$i" );
+    }
+  }
+
   # go directly to grandparent, skip FoswikiFnTestCase
   FoswikiTestCase::tear_down($this, @_);
 
@@ -85,6 +95,45 @@ sub assertElementIsPresent {
 
   $this->SUPER::assertElementIsPresent($selector, @_);
   return;
+}
+
+# Create a temporary copy of an app for testing
+# TODO: the current install process moves the app out of _apps so this will fail
+# TODO: if a test errors out, tear_down is not executed so the temp web remains,
+#       and if this is run again in the same wiki it will die in AppManagerPlugin::_install
+sub installAppWeb {
+  my ($this, $appname) = @_;
+  my $target = "Temporary${appname}Web";
+  $this->{tempWebs}{$appname} //= 1;
+  $target .= $this->{tempWebs}{$appname}++;
+  require Foswiki::Plugins::AppManagerPlugin;
+  my $res = Foswiki::Plugins::AppManagerPlugin::_install($appname, { copy => 1, installname => $target });
+  unless ($res->{result} eq 'ok') {
+    die "Installing temporary web for '$appname' failed: ". JSON->new->utf8->pretty->encode($res) ."\n";
+  }
+  $target;
+}
+
+sub createTestTopic {
+  my ($this, $web, $topic, %opts) = @_;
+  $this->assert(!Foswiki::Func::topicExists($web, $topic));
+  my $time = delete $opts{date} || time;
+  my $author = delete $opts{author} || $this->{session}{user};
+  my $text = '';
+  $text .= delete $opts{text} if $opts{text};
+  if (keys %opts) {
+    $text .= "\n\n";
+    $text .= qq[\%META:FORM{name="$opts{form}"}%\n] if $opts{form};
+    while (my ($k, $v) = each(%{$opts{fields} || {}})) {
+      $text .= qq[\%META:FIELD{name="$k" value="$v"}%\n];
+    }
+    # TODO: directly support attachments, other metadata
+  }
+  my $meta = Foswiki::Meta->new($this->{session}, $web, $topic, $text);
+  $meta->save(
+    forcedate => $time,
+    author => $author,
+  );
 }
 
 sub normalizeEpoch {
