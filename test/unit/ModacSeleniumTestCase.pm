@@ -190,6 +190,36 @@ sub setDate2Value {
   }
 }
 
+sub setPickADateValue{
+  my($this, $name, $day, $month, $year) = @_;
+  my $sel = $this->{selenium};
+  $month = $month-1;
+  my $inputfield = $sel->find_element("input[data-name='$name']", 'css');
+  $inputfield->click(); #open pickadate
+
+  $sel->find_element("div[aria-hidden='false'] .picker__button--today", 'css')->click(); #get current date
+  $inputfield->click(); #open pickadate
+
+  my $selYear = $sel->find_element("div[aria-hidden='false'] .picker__select--year", 'css');
+
+  while($selYear->get_value() != $year){
+    my $value = $selYear->get_value();
+    if($value < $year){
+      $this->setSelectValues("div[aria-hidden='false'] .picker__select--year", $value+1);
+    }elsif ($value > $year){
+      $this->setSelectValues("div[aria-hidden='false'] .picker__select--year", $value-1);
+    }
+    $selYear = $sel->find_element("div[aria-hidden='false'] .picker__select--year", 'css');
+    $value = $selYear->get_value();
+  }
+  # set month
+  $this->setSelectValues("div[aria-hidden='false'] .picker__select--month", $month);
+
+  #set day
+  $sel->find_element(".picker--opened div[aria-label^='$day']", 'css')->click();
+}
+
+
 sub setSelectValues {
   my $this = shift;
   my $selector = shift;
@@ -197,6 +227,7 @@ sub setSelectValues {
   my $s = $this->{selenium};
 
   my $select = $s->find_element($selector, 'css');
+  $select->click();
   my @options = $s->find_child_elements($select, 'option', 'css');
   foreach my $value (@values) {
     my $option = $s->find_child_element($select, "option[value=\"$value\"]", 'css');
@@ -369,6 +400,13 @@ sub waitForSelector {
 sub waitForBlockUI {
   my ($this, $ms) = @_;
   $this->waitForSelector('.blockUI.blockOverlay', $ms, 1);
+}
+sub waitForWindowClosed {
+  my ($this,$sel) = @_;
+  $this->waitFor(sub {
+    my $hand = $sel->get_window_handles;
+    scalar @$hand < 2;
+  }, 'Window does not close...', undef, 15_000 );
 }
 
 1;
