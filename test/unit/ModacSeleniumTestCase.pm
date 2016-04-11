@@ -138,8 +138,7 @@ sub createTestTopic {
 
 sub normalizeEpoch {
   my ($this, $epoch) = @_;
-  my $date = Foswiki::Time::formatTime($epoch, '$year-$mo-$day');
-  Foswiki::Time::formatTime(Foswiki::Time::parseTime($date), '$epoch');
+  Foswiki::Time::formatTime($epoch, '$epoch', 'servertime');
 }
 
 sub setInputValue {
@@ -171,6 +170,14 @@ sub setDate2Value {
   my $selector = shift;
   my ($year, $month, $day) = @_;
   my $s = $this->{selenium};
+
+  unless ($month && $day) {
+    my $date = Foswiki::Time::formatTime($year, '$year $mo $day');
+    ($year, $month, $day) = map {int($_)} split(/\s/, $date);
+  }
+
+  # months are zero based
+  $month = $month - 1 if $month;
 
   $s->find_element($selector, 'css')->click();
   my $elemY = $s->find_element("$selector + .picker--opened .picker__select--year", 'css');
