@@ -238,6 +238,7 @@ sub setPickADateValue{
 
   #set day
   $sel->find_element(".picker--opened div[aria-label^='$day']", 'css')->click();
+  $sel->pause(500);
 }
 
 
@@ -268,6 +269,7 @@ sub setSelect2Values {
   my @values = @_;
   my $s = $this->{selenium};
 
+  $s->pause(500);
   $selector .= ' + .select2' unless $selector =~ /\+\s?\.select2$/;
   my $elem = $s->find_element($selector, 'css');
   my $resultSel = '.select2-results__option--highlighted';
