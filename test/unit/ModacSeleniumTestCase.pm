@@ -202,8 +202,18 @@ sub setDate2Value {
 }
 
 sub setPickADateValue{
-  my($this, $name, $day, $month, $year) = @_;
+  my $this = shift;
+  my $name = shift;
+  my($day, $month, $year) = @_;
   my $sel = $this->{selenium};
+
+  unless ($month && $year) {
+    my $date = Foswiki::Time::formatTime($day, '$year $mo $day');
+    ($year, $month, $day) = map {int($_)} split(/\s/, $date);
+  }
+  if(int($day) < 10){
+    $day = "0".$day;
+  }
   $month = $month-1;
   my $inputfield = $sel->find_element("input[data-name='$name']", 'css');
   $inputfield->click(); #open pickadate
