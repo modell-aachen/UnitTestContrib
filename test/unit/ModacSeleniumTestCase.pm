@@ -195,6 +195,10 @@ sub setDate2Value {
       last;
     }
   }
+
+  # ...
+  # Waiting 2 secs allows us to set more than one datepicker value
+  $s->pause(2000);
 }
 
 sub setPickADateValue{
