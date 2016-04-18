@@ -269,7 +269,7 @@ sub setSelect2Values {
   my @values = @_;
   my $s = $this->{selenium};
 
-  $s->pause(500);
+  $this->waitForSelector($selector);
   $selector .= ' + .select2' unless $selector =~ /\+\s?\.select2$/;
   my $elem = $s->find_element($selector, 'css');
   my $resultSel = '.select2-results__option--highlighted';
