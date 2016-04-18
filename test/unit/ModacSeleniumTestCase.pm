@@ -279,6 +279,7 @@ sub setSelect2Values {
     $elem->click();
     $this->waitForSelector('.select2-container--open');
     $s->find_element('.select2-container--open .select2-search__field', 'css')->send_keys($value);
+    $this->waitForSelector('.select2-results__option.loading-results', 10_000, 1);
 
     for (my $i = 0; $i < 15; $i++) {
       $this->waitForSelector($resultSel);
