@@ -248,19 +248,29 @@ sub setSelectValues {
   my @values = @_;
   my $s = $this->{selenium};
 
+  # XXX unfortunately the click on an option fails on firefox
+  # Doing a JavaScript workaround
+
   my $select = $s->find_element($selector, 'css');
   $select->click();
-  my @options = $s->find_child_elements($select, 'option', 'css');
+#  my @options = $s->find_child_elements($select, 'option', 'css');
+#  foreach my $value (@values) {
+#    my $option = $s->find_child_element($select, "option[value=\"$value\"]", 'css');
+#    if ($option) {
+#      $option->click();
+#      next;
+#    }
+#
+#    my @results = grep {$_->get_text() =~ /^$value$/} @options;
+#    $results[0]->click() if scalar(@results);
+#  }
+  my $escapedSelector = $selector;
+  $escapedSelector =~ s#'#\\'#g;
+  $s->execute_script("jQuery('$escapedSelector option').removeProp('selected')");
   foreach my $value (@values) {
-    my $option = $s->find_child_element($select, "option[value=\"$value\"]", 'css');
-    if ($option) {
-      $option->click();
-      next;
-    }
-
-    my @results = grep {$_->get_text() =~ /^$value$/} @options;
-    $results[0]->click() if scalar(@results);
+      $s->execute_script("jQuery('$escapedSelector option[value=\"$value\"]').prop('selected', true).parent().change()");
   }
+
 }
 
 sub setSelect2Values {
