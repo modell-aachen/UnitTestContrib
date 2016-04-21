@@ -1,4 +1,6 @@
 bin/test 0755
+data/System/SeleniumTestNewUserTemplate.txt 0644
+data/System/SeleniumTestUserForm.txt 0644
 data/System/UnitTestContrib.txt 0644
 lib/Foswiki/Contrib/UnitTestContrib.pm 0644
 lib/Foswiki/Contrib/UnitTestContrib/Config.spec 0644
@@ -79,6 +81,7 @@ test/unit/ModacTestRunner/ModacTestRunnerSeleniumTestCase.pm 0755
 test/unit/ModacTestRunner/runtests 0755
 test/unit/ModacTestRunner/runtests_config-example 0644
 test/unit/MetaTests.pm 0644
+test/unit/ModacSeleniumTestCase.pm 0644
 test/unit/NetTests.pm 0644
 test/unit/PasswordTests.pm 0644
 test/unit/PluginHandlerTests.pm 0644

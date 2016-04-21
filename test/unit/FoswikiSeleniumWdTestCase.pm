@@ -296,7 +296,7 @@ sub assertElementIsNotVisible {
     my $message = shift;
     $this->assertElementIsPresent($locator);
     $message ||= "Element $locator is visible";
-    $this->assert( not $this->{selenium}->find_element( $locator, $locatorType )->is_displayed, $message );
+    $this->assert( $this->{selenium}->find_element( $locator, $locatorType )->is_hidden, $message );
 
     return;
 }
