@@ -266,9 +266,8 @@ sub setSelectValues {
 #  }
   my $escapedSelector = $selector;
   $escapedSelector =~ s#'#\\'#g;
-  $s->execute_script("jQuery('$escapedSelector option').removeProp('selected')");
   foreach my $value (@values) {
-      $s->execute_script("jQuery('$escapedSelector option[value=\"$value\"]').prop('selected', true).parent().change()");
+      $s->execute_script("jQuery('$escapedSelector').blur().val(\"$value\").change()");
   }
 
 }
