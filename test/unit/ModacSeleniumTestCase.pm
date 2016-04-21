@@ -238,7 +238,7 @@ sub setPickADateValue{
 
   #set day
   $sel->find_element(".picker--opened div[aria-label^='$day']", 'css')->click();
-  $sel->pause(500);
+  $sel->pause(1000);
 }
 
 
