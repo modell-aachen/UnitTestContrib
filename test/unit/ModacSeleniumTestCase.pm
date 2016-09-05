@@ -215,6 +215,17 @@ sub setPickADateValue{
     $day = "0".$day;
   }
   $month = $month-1;
+
+  # XXX: Unfortunately doing this via the frontend is unreliable.
+  # Workaround:
+  # (Why doesn't the 'set' command trigger any handlers!?)
+  $this->{selenium}->execute_script(<<"SCRIPT");
+var picker = jQuery('[data-name="$name"]').pickadate('picker');
+picker.set('select', [$year, $month, $day]);
+picker.trigger('set', {select: picker.get('select').pick});
+SCRIPT
+  return;
+
   my $inputfield = $sel->find_element("input[data-name='$name']", 'css');
   $inputfield->click(); #open pickadate
 
